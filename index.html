@@ -27,11 +27,16 @@
             border-radius: 4px;
             margin-bottom: 5px;
         }
+        /* Auth Styles */
+        .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #authStatus { font-size: 0.9rem; }
+        #profileDropdown .dropdown-toggle::after { margin-left: 0.5rem; }
+        .modal-backdrop { z-index: 1040; }
+        .modal { z-index: 1050; }
     </style>
 </head>
 <body>
-    <body>
-    <!-- Add this Navigation Bar with Login/Auth -->
+    <!-- Navigation Bar with Auth -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="#">
@@ -78,7 +83,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Login Form -->
                     <form id="loginForm" onsubmit="return false;">
                         <div class="mb-3">
                             <label for="loginEmail" class="form-label">Email</label>
@@ -95,7 +99,6 @@
                         <button type="submit" class="btn btn-primary w-100" onclick="signIn()">Sign In</button>
                     </form>
                     
-                    <!-- Sign Up Link -->
                     <div class="text-center mt-3">
                         <p class="text-muted">Don't have an account? 
                             <a href="#" onclick="showSignUpModal()" class="text-primary">Sign Up</a>
@@ -156,9 +159,7 @@
         </div>
     </div>
 
-    <!-- Rest of your existing container -->
-    <div class="container mt-5">
-        <!-- ... your existing container content ... -->
+    <!-- Your Original Content Starts Here -->
     <div class="container mt-5">
         <h1 class="text-center mb-4">🏛️ Benefit Eligibility Portal</h1>
         
@@ -312,10 +313,35 @@
         <div id="errorBox" class="alert alert-danger mt-4" style="display: none;"></div>
     </div>
 
-    <!-- Font Awesome for icons -->
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+    
+    <script>
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH60LAk",
+        authDomain: "web-6ef07.firebaseapp.com",
+        projectId: "web-6ef07",
+        storageBucket: "web-6ef07.firebasestorage.app",
+        messagingSenderId: "1028816794584",
+        appId: "1:1028816794584:web:792e488366197446d778ad",
+        measurementId: "G-TB7WB1E17B"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      console.log('Firebase initialized');
+    </script>
+
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Your App JavaScript -->
     <script src="app.js"></script>
 </body>
-
 </html>
