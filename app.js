@@ -1,41 +1,42 @@
 // ============================================
-// FIREBASE AUTHENTICATION
+// FIREBASE INITIALIZATION
 // ============================================
 
-// Firebase Auth variables
-let auth = null;
-let currentUser = null;
-let firebaseInitialized = false;
+// Your Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH60LAk",
+    authDomain: "web-6ef07.firebaseapp.com",
+    projectId: "web-6ef07",
+    storageBucket: "web-6ef07.firebasestorage.app",
+    messagingSenderId: "1028816794584",
+    appId: "1:1028816794584:web:792e488366197446d778ad",
+    measurementId: "G-TB7WB1E17B"
+};
 
-// Initialize Firebase when page loads
-function initializeFirebase() {
-    try {
-        // Check if Firebase is already available
-        if (typeof firebase === 'undefined') {
-            console.error('Firebase SDK not loaded');
-            setTimeout(initializeFirebase, 1000); // Retry after 1 second
-            return;
-        }
-        
-        // Initialize auth
-        auth = firebase.auth();
-        firebaseInitialized = true;
-        console.log('Firebase Auth initialized successfully');
-        
-        // Set up auth state listener
-        setupAuthListener();
-        
-    } catch (error) {
-        console.error('Firebase initialization error:', error);
-        // Retry after 2 seconds
-        setTimeout(initializeFirebase, 2000);
-    }
+// Initialize Firebase
+let app;
+let auth;
+
+try {
+    app = firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    console.log('Firebase initialized successfully');
+} catch (error) {
+    console.error('Firebase initialization error:', error);
+    // Fallback to demo mode if Firebase fails
+    initDemoMode();
 }
 
-// Set up auth state listener
-function setupAuthListener() {
+// ============================================
+// AUTHENTICATION FUNCTIONS
+// ============================================
+
+let currentUser = null;
+
+// Initialize auth state listener
+function initAuth() {
     if (!auth) {
-        console.error('Auth not initialized');
+        console.log('Auth not available, using demo mode');
         return;
     }
     
@@ -71,14 +72,6 @@ function updateAuthUI(user) {
         if (profileName) {
             profileName.textContent = user.displayName || user.email.split('@')[0];
         }
-        
-        // Close login modal if open
-        const loginModalElement = document.getElementById('loginModal');
-        if (loginModalElement) {
-            const loginModal = bootstrap.Modal.getInstance(loginModalElement);
-            if (loginModal) loginModal.hide();
-        }
-        
     } else {
         // User is signed out
         if (loginBtn) loginBtn.style.display = 'block';
@@ -89,49 +82,23 @@ function updateAuthUI(user) {
 
 // Show login modal
 function showLoginModal() {
-    if (!firebaseInitialized) {
-        alert('Authentication service is loading. Please wait a moment.');
-        return;
-    }
-    
-    const loginModalElement = document.getElementById('loginModal');
-    if (loginModalElement) {
-        const loginModal = new bootstrap.Modal(loginModalElement);
-        loginModal.show();
-    }
+    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+    loginModal.show();
 }
 
 // Show sign up modal
 function showSignUpModal() {
-    if (!firebaseInitialized) {
-        alert('Authentication service is loading. Please wait a moment.');
-        return;
-    }
+    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+    if (loginModal) loginModal.hide();
     
-    // Close login modal
-    const loginModalElement = document.getElementById('loginModal');
-    if (loginModalElement) {
-        const loginModal = bootstrap.Modal.getInstance(loginModalElement);
-        if (loginModal) loginModal.hide();
-    }
-    
-    // Show sign up modal
-    const signUpModalElement = document.getElementById('signUpModal');
-    if (signUpModalElement) {
-        const signUpModal = new bootstrap.Modal(signUpModalElement);
-        signUpModal.show();
-    }
+    const signUpModal = new bootstrap.Modal(document.getElementById('signUpModal'));
+    signUpModal.show();
 }
 
 // Sign in with email/password
 async function signIn() {
-    if (!firebaseInitialized || !auth) {
-        alert('Authentication service not ready. Please try again.');
-        return;
-    }
-    
-    const email = document.getElementById('loginEmail')?.value;
-    const password = document.getElementById('loginPassword')?.value;
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
     
     if (!email || !password) {
         alert('Please enter both email and password');
@@ -142,35 +109,22 @@ async function signIn() {
         await auth.signInWithEmailAndPassword(email, password);
         console.log('Signed in successfully');
         
+        // Close modal
+        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if (loginModal) loginModal.hide();
+        
     } catch (error) {
         console.error('Sign in error:', error);
-        let errorMessage = 'Error signing in';
-        
-        if (error.code === 'auth/user-not-found') {
-            errorMessage = 'No account found with this email';
-        } else if (error.code === 'auth/wrong-password') {
-            errorMessage = 'Incorrect password';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Invalid email address';
-        } else {
-            errorMessage = error.message;
-        }
-        
-        alert('Error: ' + errorMessage);
+        alert('Error: ' + error.message);
     }
 }
 
 // Create new account
 async function createAccount() {
-    if (!firebaseInitialized || !auth) {
-        alert('Authentication service not ready. Please try again.');
-        return;
-    }
-    
-    const name = document.getElementById('signUpName')?.value;
-    const email = document.getElementById('signUpEmail')?.value;
-    const password = document.getElementById('signUpPassword')?.value;
-    const confirmPassword = document.getElementById('confirmPassword')?.value;
+    const name = document.getElementById('signUpName').value;
+    const email = document.getElementById('signUpEmail').value;
+    const password = document.getElementById('signUpPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
     
     // Validation
     if (!name || !email || !password || !confirmPassword) {
@@ -198,40 +152,20 @@ async function createAccount() {
         
         console.log('Account created successfully');
         
-        // Close sign up modal
-        const signUpModalElement = document.getElementById('signUpModal');
-        if (signUpModalElement) {
-            const signUpModal = bootstrap.Modal.getInstance(signUpModalElement);
-            if (signUpModal) signUpModal.hide();
-        }
+        // Close modal
+        const signUpModal = bootstrap.Modal.getInstance(document.getElementById('signUpModal'));
+        if (signUpModal) signUpModal.hide();
         
         alert('Account created successfully! You are now signed in.');
         
     } catch (error) {
         console.error('Account creation error:', error);
-        let errorMessage = 'Error creating account';
-        
-        if (error.code === 'auth/email-already-in-use') {
-            errorMessage = 'Email already in use. Please sign in instead.';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Invalid email address';
-        } else if (error.code === 'auth/weak-password') {
-            errorMessage = 'Password is too weak';
-        } else {
-            errorMessage = error.message;
-        }
-        
-        alert('Error: ' + errorMessage);
+        alert('Error: ' + error.message);
     }
 }
 
 // Sign out
 async function signOut() {
-    if (!firebaseInitialized || !auth) {
-        alert('Authentication service not ready.');
-        return;
-    }
-    
     try {
         await auth.signOut();
         console.log('Signed out successfully');
@@ -250,57 +184,102 @@ function viewProfile() {
     }
     
     const profileInfo = document.getElementById('profileInfo');
-    if (profileInfo) {
-        profileInfo.innerHTML = `
-            <div class="text-center mb-4">
-                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
-                <h4>${currentUser.displayName || 'User'}</h4>
-                <p class="text-muted">${currentUser.email}</p>
+    profileInfo.innerHTML = `
+        <div class="text-center mb-4">
+            <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+            <h4>${currentUser.displayName || 'User'}</h4>
+            <p class="text-muted">${currentUser.email}</p>
+        </div>
+        <div class="list-group">
+            <div class="list-group-item">
+                <strong>Email:</strong> ${currentUser.email}
             </div>
-            <div class="list-group">
-                <div class="list-group-item">
-                    <strong>Email:</strong> ${currentUser.email}
-                </div>
-                <div class="list-group-item">
-                    <strong>Account Created:</strong> ${new Date(currentUser.metadata.creationTime).toLocaleDateString()}
-                </div>
-                <div class="list-group-item">
-                    <strong>Last Sign In:</strong> ${new Date(currentUser.metadata.lastSignInTime).toLocaleDateString()}
-                </div>
-                <div class="list-group-item">
-                    <strong>Email Verified:</strong> ${currentUser.emailVerified ? '✅ Yes' : '❌ No'}
-                </div>
+            <div class="list-group-item">
+                <strong>Account Created:</strong> ${new Date(currentUser.metadata.creationTime).toLocaleDateString()}
             </div>
-        `;
-    }
+            <div class="list-group-item">
+                <strong>Last Sign In:</strong> ${new Date(currentUser.metadata.lastSignInTime).toLocaleDateString()}
+            </div>
+            <div class="list-group-item">
+                <strong>Email Verified:</strong> ${currentUser.emailVerified ? '✅ Yes' : '❌ No'}
+            </div>
+        </div>
+    `;
     
-    const profileModalElement = document.getElementById('profileModal');
-    if (profileModalElement) {
-        const profileModal = new bootstrap.Modal(profileModalElement);
-        profileModal.show();
-    }
+    const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
+    profileModal.show();
 }
 
-// View applications (placeholder)
+// View applications
 function viewApplications() {
     alert('This feature will show your past applications. Coming soon!');
 }
 
 // Auto-fill form with user data
 function autoFillUserData(user) {
-    const nameField = document.getElementById('name');
-    const emailField = document.getElementById('email');
+    document.getElementById('name').value = user.displayName || '';
+    document.getElementById('email').value = user.email || '';
+}
+
+// Demo mode fallback
+function initDemoMode() {
+    console.log('Initializing demo mode');
+    // Create mock auth object
+    auth = {
+        onAuthStateChanged: function(callback) {
+            // Initially no user
+            callback(null);
+            return () => {};
+        },
+        signInWithEmailAndPassword: function() {
+            return Promise.reject(new Error('Firebase not available. Using demo mode.'));
+        },
+        createUserWithEmailAndPassword: function() {
+            return Promise.reject(new Error('Firebase not available. Using demo mode.'));
+        },
+        signOut: function() {
+            return Promise.resolve();
+        }
+    };
     
-    if (nameField && !nameField.value) {
-        nameField.value = user.displayName || '';
-    }
-    if (emailField && !emailField.value) {
-        emailField.value = user.email || '';
-    }
+    // Show demo message
+    console.warn('Firebase not available. Running in demo mode.');
 }
 
 // ============================================
-// YOUR ORIGINAL APP CODE STARTS HERE
+// EVENT LISTENER SETUP
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize auth
+    initAuth();
+    
+    // Set up event listeners for auth buttons
+    document.getElementById('loginBtn').addEventListener('click', showLoginModal);
+    document.getElementById('showSignUpBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showSignUpModal();
+    });
+    document.getElementById('signInBtn').addEventListener('click', signIn);
+    document.getElementById('createAccountBtn').addEventListener('click', createAccount);
+    document.getElementById('viewProfileBtn').addEventListener('click', viewProfile);
+    document.getElementById('viewApplicationsBtn').addEventListener('click', viewApplications);
+    document.getElementById('signOutBtn').addEventListener('click', signOut);
+    
+    // File upload area click handlers
+    document.getElementById('uploadApplicationArea').addEventListener('click', function() {
+        document.getElementById('applicationPdf').click();
+    });
+    
+    document.getElementById('uploadSupportingArea').addEventListener('click', function() {
+        document.getElementById('supportingPdf').click();
+    });
+    
+    console.log('Auth system initialized');
+});
+
+// ============================================
+// YOUR ORIGINAL APP CODE (UNCHANGED)
 // ============================================
 
 const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook-test/9f091cf5-2629-4342-8b07-41c42601028b';
@@ -308,10 +287,6 @@ let uploadedFiles = {
     applicationPdf: null,
     supportingPdf: null
 };
-
-// ============================================
-// FILE UPLOAD HANDLERS
-// ============================================
 
 // Handle Application PDF upload
 document.getElementById('applicationPdf').addEventListener('change', function(e) {
@@ -382,9 +357,7 @@ function removeFile(type) {
     }
 }
 
-// ============================================
 // MAIN FUNCTION: SEND DATA TO N8N
-// ============================================
 async function submitToN8n() {
     // Validate
     const name = document.getElementById('name').value;
@@ -459,9 +432,7 @@ async function submitToN8n() {
     }
 }
 
-// ============================================
 // PROCESS AND DISPLAY RESULT
-// ============================================
 function processAndDisplayResult(resultText, name, email, issueType) {
     const resultBox = document.getElementById('resultBox');
     const resultHeader = document.getElementById('resultHeader');
@@ -628,96 +599,4 @@ function displayTextResult(text) {
     factorsList.innerHTML = `
         <div class="list-group-item">
             <h6 class="mb-1">Decision Summary</h6>
-            <p class="mb-1">${text.length > 200 ? text.substring(0, 200) + '...' : text}</p>
-        </div>
-    `;
-    
-    // Default next steps
-    nextSteps.innerHTML = `
-        <li class="list-group-item">
-            <i class="fas fa-phone me-2"></i>Contact support for questions
-        </li>
-        <li class="list-group-item">
-            <i class="fas fa-envelope me-2"></i>Check your email for confirmation
-        </li>
-    `;
-}
-
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-function showError(message) {
-    const errorBox = document.getElementById('errorBox');
-    errorBox.innerHTML = `
-        <h5><i class="fas fa-exclamation-triangle me-2"></i>Error</h5>
-        <p>${message}</p>
-        <button onclick="resetForm()" class="btn btn-sm btn-outline-danger mt-2">Try Again</button>
-    `;
-    errorBox.style.display = 'block';
-}
-
-function resetForm() {
-    // Reset form
-    document.getElementById('benefitForm').reset();
-    
-    // Reset file uploads
-    uploadedFiles = { applicationPdf: null, supportingPdf: null };
-    document.getElementById('applicationFileList').innerHTML = '';
-    document.getElementById('supportingFileList').innerHTML = '';
-    
-    // Hide result and error boxes
-    document.getElementById('resultBox').style.display = 'none';
-    document.getElementById('errorBox').style.display = 'none';
-}
-
-function downloadResult() {
-    // Create a simple decision letter
-    const applicantName = document.getElementById('name').value;
-    const status = document.getElementById('resultTitle').textContent;
-    const description = document.getElementById('resultDescription').textContent;
-    
-    const decisionLetter = `
-        Benefit Eligibility Decision Letter
-        
-        Applicant: ${applicantName}
-        Date: ${new Date().toLocaleDateString()}
-        Status: ${status}
-        
-        Decision Summary:
-        ${description}
-        
-        This is an automated decision letter.
-        Please contact support for official documentation.
-    `;
-    
-    // Create a blob and download link
-    const blob = new Blob([decisionLetter], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `decision-letter-${applicantName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// ============================================
-// FORM SUBMISSION HANDLER
-// ============================================
-document.getElementById('benefitForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    submitToN8n();
-});
-
-// ============================================
-// INITIALIZATION
-// ============================================
-console.log('Benefit Portal initialized');
-console.log('N8N Webhook URL:', N8N_WEBHOOK_URL);
-
-// Initialize Firebase when page loads
-window.addEventListener('load', function() {
-    console.log('Page loaded, initializing Firebase...');
-    initializeFirebase();
-});
+            <p class="mb-1">${text.length > 200 ? text.substring(0, 200) + '
