@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Benefit Eligibility Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .result-box { display: none; }
         .loading { display: none; }
@@ -31,8 +32,6 @@
         .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         #authStatus { font-size: 0.9rem; }
         #profileDropdown .dropdown-toggle::after { margin-left: 0.5rem; }
-        .modal-backdrop { z-index: 1040; }
-        .modal { z-index: 1050; }
     </style>
 </head>
 <body>
@@ -52,7 +51,7 @@
                 <!-- Auth Buttons/Profile -->
                 <div id="authButtons">
                     <!-- Login Button (shown when not logged in) -->
-                    <button id="loginBtn" class="btn btn-light btn-sm me-2" onclick="showLoginModal()">
+                    <button id="loginBtn" class="btn btn-light btn-sm me-2">
                         <i class="fas fa-sign-in-alt me-1"></i>Sign In
                     </button>
                     
@@ -63,10 +62,10 @@
                             <span id="profileName">Profile</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="viewProfile()"><i class="fas fa-user me-2"></i>My Profile</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="viewApplications()"><i class="fas fa-file-alt me-2"></i>My Applications</a></li>
+                            <li><a class="dropdown-item" href="#" id="viewProfileBtn"><i class="fas fa-user me-2"></i>My Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="viewApplicationsBtn"><i class="fas fa-file-alt me-2"></i>My Applications</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="signOut()"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                            <li><a class="dropdown-item text-danger" href="#" id="signOutBtn"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
                         </ul>
                     </div>
                 </div>
@@ -83,7 +82,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="loginForm" onsubmit="return false;">
+                    <form id="loginForm">
                         <div class="mb-3">
                             <label for="loginEmail" class="form-label">Email</label>
                             <input type="email" class="form-control" id="loginEmail" placeholder="your@email.com" required>
@@ -96,12 +95,12 @@
                             <input type="checkbox" class="form-check-input" id="rememberMe">
                             <label class="form-check-label" for="rememberMe">Remember me</label>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100" onclick="signIn()">Sign In</button>
+                        <button type="button" class="btn btn-primary w-100" id="signInBtn">Sign In</button>
                     </form>
                     
                     <div class="text-center mt-3">
                         <p class="text-muted">Don't have an account? 
-                            <a href="#" onclick="showSignUpModal()" class="text-primary">Sign Up</a>
+                            <a href="#" id="showSignUpBtn" class="text-primary">Sign Up</a>
                         </p>
                     </div>
                 </div>
@@ -118,7 +117,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="signUpForm" onsubmit="return false;">
+                    <form id="signUpForm">
                         <div class="mb-3">
                             <label for="signUpName" class="form-label">Full Name</label>
                             <input type="text" class="form-control" id="signUpName" required>
@@ -135,7 +134,7 @@
                             <label for="confirmPassword" class="form-label">Confirm Password</label>
                             <input type="password" class="form-control" id="confirmPassword" minlength="6" required>
                         </div>
-                        <button type="submit" class="btn btn-success w-100" onclick="createAccount()">Create Account</button>
+                        <button type="button" class="btn btn-success w-100" id="createAccountBtn">Create Account</button>
                     </form>
                 </div>
             </div>
@@ -159,7 +158,7 @@
         </div>
     </div>
 
-    <!-- Your Original Content Starts Here -->
+    <!-- Your Original Content -->
     <div class="container mt-5">
         <h1 class="text-center mb-4">🏛️ Benefit Eligibility Portal</h1>
         
@@ -200,7 +199,7 @@
                         <label class="form-label fw-bold">1. Upload Application Form (PDF) *</label>
                         <p class="text-muted">This should include your completed application with income, household details, and personal information.</p>
                         
-                        <div class="file-upload-area" onclick="document.getElementById('applicationPdf').click()">
+                        <div class="file-upload-area" id="uploadApplicationArea">
                             <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
                             <p class="mt-2">Click to upload Application Form PDF</p>
                             <small class="text-muted">Max file size: 5MB</small>
@@ -218,7 +217,7 @@
                         <label class="form-label fw-bold">2. Upload Supporting Documents (PDF)</label>
                         <p class="text-muted">Optional: Medical certificates, income proofs, ID cards, etc.</p>
                         
-                        <div class="file-upload-area" onclick="document.getElementById('supportingPdf').click()">
+                        <div class="file-upload-area" id="uploadSupportingArea">
                             <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
                             <p class="mt-2">Click to upload Supporting Documents PDF</p>
                             <small class="text-muted">Max file size: 5MB</small>
@@ -314,35 +313,13 @@
     </div>
 
     <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     
-<script>
-// Firebase Configuration - GET THIS FROM YOUR FIREBASE CONSOLE
-  const firebaseConfig = {
-    apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH60LAk",
-    authDomain: "web-6ef07.firebaseapp.com",
-    projectId: "web-6ef07",
-    storageBucket: "web-6ef07.firebasestorage.app",
-    messagingSenderId: "1028816794584",
-    appId: "1:1028816794584:web:792e488366197446d778ad",
-    measurementId: "G-TB7WB1E17B"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  console.log('Firebase initialized with project:', firebaseConfig.projectId);
-</script>
-
-    <!-- Font Awesome -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    
-    <!-- Bootstrap -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Your App JavaScript -->
     <script src="app.js"></script>
 </body>
 </html>
-
