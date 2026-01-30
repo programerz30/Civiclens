@@ -1,285 +1,154 @@
 // ============================================
-// FIREBASE INITIALIZATION
+// SIMPLE AUTHENTICATION SYSTEM
 // ============================================
 
-// Your Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH60LAk",
-    authDomain: "web-6ef07.firebaseapp.com",
-    projectId: "web-6ef07",
-    storageBucket: "web-6ef07.firebasestorage.app",
-    messagingSenderId: "1028816794584",
-    appId: "1:1028816794584:web:792e488366197446d778ad",
-    measurementId: "G-TB7WB1E17B"
-};
+// Simple in-memory user storage (for demo)
+const users = JSON.parse(localStorage.getItem('benefit_users') || '{}');
+let currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
 
-// Initialize Firebase
-let app;
-let auth;
-
-try {
-    app = firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    console.log('Firebase initialized successfully');
-} catch (error) {
-    console.error('Firebase initialization error:', error);
-    // Fallback to demo mode if Firebase fails
-    initDemoMode();
-}
-
-// ============================================
-// AUTHENTICATION FUNCTIONS
-// ============================================
-
-let currentUser = null;
-
-// Initialize auth state listener
+// Initialize auth UI
 function initAuth() {
-    if (!auth) {
-        console.log('Auth not available, using demo mode');
-        return;
-    }
+    updateAuthUI();
     
-    auth.onAuthStateChanged(function(user) {
-        currentUser = user;
-        updateAuthUI(user);
-        
-        if (user) {
-            console.log('User signed in:', user.email);
-            autoFillUserData(user);
-        } else {
-            console.log('No user signed in');
-        }
-    });
-}
-
-// Update UI based on auth state
-function updateAuthUI(user) {
-    const loginBtn = document.getElementById('loginBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    const authStatus = document.getElementById('authStatus');
-    const userEmail = document.getElementById('userEmail');
-    const profileName = document.getElementById('profileName');
-    
-    if (user) {
-        // User is signed in
-        if (loginBtn) loginBtn.style.display = 'none';
-        if (profileDropdown) profileDropdown.style.display = 'block';
-        if (authStatus) authStatus.style.display = 'block';
-        
-        // Update user info
-        if (userEmail) userEmail.textContent = user.email;
-        if (profileName) {
-            profileName.textContent = user.displayName || user.email.split('@')[0];
-        }
-    } else {
-        // User is signed out
-        if (loginBtn) loginBtn.style.display = 'block';
-        if (profileDropdown) profileDropdown.style.display = 'none';
-        if (authStatus) authStatus.style.display = 'none';
+    // Auto-fill form if user is logged in
+    if (currentUser) {
+        autoFillUserData(currentUser);
     }
 }
 
 // Show login modal
-function showLoginModal() {
-    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-    loginModal.show();
+function showLogin() {
+    const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+    modal.show();
 }
 
-// Show sign up modal
-function showSignUpModal() {
-    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-    if (loginModal) loginModal.hide();
-    
-    const signUpModal = new bootstrap.Modal(document.getElementById('signUpModal'));
-    signUpModal.show();
+// Show signup modal
+function showSignup() {
+    const modal = new bootstrap.Modal(document.getElementById('signupModal'));
+    modal.show();
 }
 
-// Sign in with email/password
-async function signIn() {
+// Login function
+function login() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
-    if (!email || !password) {
-        alert('Please enter both email and password');
+    // Demo account
+    if (email === 'demo@example.com' && password === 'demo123') {
+        currentUser = {
+            name: 'Demo User',
+            email: 'demo@example.com',
+            avatar: 'D'
+        };
+        localStorage.setItem('current_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        autoFillUserData(currentUser);
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        modal.hide();
+        
+        alert('Welcome back, Demo User!');
         return;
     }
     
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-        console.log('Signed in successfully');
+    // Check regular users
+    if (users[email] && users[email].password === password) {
+        currentUser = {
+            name: users[email].name,
+            email: email,
+            avatar: users[email].name.charAt(0).toUpperCase()
+        };
+        localStorage.setItem('current_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        autoFillUserData(currentUser);
         
-        // Close modal
-        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-        if (loginModal) loginModal.hide();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        modal.hide();
         
-    } catch (error) {
-        console.error('Sign in error:', error);
-        alert('Error: ' + error.message);
+        alert(`Welcome back, ${users[email].name}!`);
+    } else {
+        alert('Invalid email or password. Try demo account:\nEmail: demo@example.com\nPassword: demo123');
     }
 }
 
-// Create new account
-async function createAccount() {
-    const name = document.getElementById('signUpName').value;
-    const email = document.getElementById('signUpEmail').value;
-    const password = document.getElementById('signUpPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+// Signup function
+function signup() {
+    const name = document.getElementById('signupName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
     
-    // Validation
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
         alert('Please fill all fields');
         return;
     }
     
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
+    if (users[email]) {
+        alert('Email already registered. Please sign in instead.');
         return;
     }
     
-    if (password.length < 6) {
-        alert('Password must be at least 6 characters');
-        return;
-    }
+    // Save new user
+    users[email] = { name, password };
+    localStorage.setItem('benefit_users', JSON.stringify(users));
     
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        
-        // Update profile with name
-        await userCredential.user.updateProfile({
-            displayName: name
-        });
-        
-        console.log('Account created successfully');
-        
-        // Close modal
-        const signUpModal = bootstrap.Modal.getInstance(document.getElementById('signUpModal'));
-        if (signUpModal) signUpModal.hide();
-        
-        alert('Account created successfully! You are now signed in.');
-        
-    } catch (error) {
-        console.error('Account creation error:', error);
-        alert('Error: ' + error.message);
-    }
+    // Set as current user
+    currentUser = {
+        name: name,
+        email: email,
+        avatar: name.charAt(0).toUpperCase()
+    };
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    
+    updateAuthUI();
+    autoFillUserData(currentUser);
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+    modal.hide();
+    
+    alert(`Account created successfully! Welcome, ${name}!`);
 }
 
-// Sign out
-async function signOut() {
-    try {
-        await auth.signOut();
-        console.log('Signed out successfully');
-        alert('You have been signed out');
-    } catch (error) {
-        console.error('Sign out error:', error);
-        alert('Error signing out: ' + error.message);
-    }
+// Logout function
+function logout() {
+    currentUser = null;
+    localStorage.removeItem('current_user');
+    updateAuthUI();
+    alert('You have been logged out.');
 }
 
-// View profile
-function viewProfile() {
-    if (!currentUser) {
-        alert('Please sign in first');
-        return;
+// Update auth UI
+function updateAuthUI() {
+    const loginSection = document.getElementById('loginSection');
+    const userSection = document.getElementById('userSection');
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (currentUser) {
+        loginSection.style.display = 'none';
+        userSection.style.display = 'flex';
+        userName.textContent = currentUser.name;
+        userAvatar.textContent = currentUser.avatar;
+    } else {
+        loginSection.style.display = 'block';
+        userSection.style.display = 'none';
     }
-    
-    const profileInfo = document.getElementById('profileInfo');
-    profileInfo.innerHTML = `
-        <div class="text-center mb-4">
-            <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
-            <h4>${currentUser.displayName || 'User'}</h4>
-            <p class="text-muted">${currentUser.email}</p>
-        </div>
-        <div class="list-group">
-            <div class="list-group-item">
-                <strong>Email:</strong> ${currentUser.email}
-            </div>
-            <div class="list-group-item">
-                <strong>Account Created:</strong> ${new Date(currentUser.metadata.creationTime).toLocaleDateString()}
-            </div>
-            <div class="list-group-item">
-                <strong>Last Sign In:</strong> ${new Date(currentUser.metadata.lastSignInTime).toLocaleDateString()}
-            </div>
-            <div class="list-group-item">
-                <strong>Email Verified:</strong> ${currentUser.emailVerified ? '✅ Yes' : '❌ No'}
-            </div>
-        </div>
-    `;
-    
-    const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
-    profileModal.show();
-}
-
-// View applications
-function viewApplications() {
-    alert('This feature will show your past applications. Coming soon!');
 }
 
 // Auto-fill form with user data
 function autoFillUserData(user) {
-    document.getElementById('name').value = user.displayName || '';
-    document.getElementById('email').value = user.email || '';
-}
-
-// Demo mode fallback
-function initDemoMode() {
-    console.log('Initializing demo mode');
-    // Create mock auth object
-    auth = {
-        onAuthStateChanged: function(callback) {
-            // Initially no user
-            callback(null);
-            return () => {};
-        },
-        signInWithEmailAndPassword: function() {
-            return Promise.reject(new Error('Firebase not available. Using demo mode.'));
-        },
-        createUserWithEmailAndPassword: function() {
-            return Promise.reject(new Error('Firebase not available. Using demo mode.'));
-        },
-        signOut: function() {
-            return Promise.resolve();
-        }
-    };
+    const nameField = document.getElementById('name');
+    const emailField = document.getElementById('email');
     
-    // Show demo message
-    console.warn('Firebase not available. Running in demo mode.');
+    if (nameField && !nameField.value) {
+        nameField.value = user.name || '';
+    }
+    if (emailField && !emailField.value) {
+        emailField.value = user.email || '';
+    }
 }
 
 // ============================================
-// EVENT LISTENER SETUP
-// ============================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize auth
-    initAuth();
-    
-    // Set up event listeners for auth buttons
-    document.getElementById('loginBtn').addEventListener('click', showLoginModal);
-    document.getElementById('showSignUpBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        showSignUpModal();
-    });
-    document.getElementById('signInBtn').addEventListener('click', signIn);
-    document.getElementById('createAccountBtn').addEventListener('click', createAccount);
-    document.getElementById('viewProfileBtn').addEventListener('click', viewProfile);
-    document.getElementById('viewApplicationsBtn').addEventListener('click', viewApplications);
-    document.getElementById('signOutBtn').addEventListener('click', signOut);
-    
-    // File upload area click handlers
-    document.getElementById('uploadApplicationArea').addEventListener('click', function() {
-        document.getElementById('applicationPdf').click();
-    });
-    
-    document.getElementById('uploadSupportingArea').addEventListener('click', function() {
-        document.getElementById('supportingPdf').click();
-    });
-    
-    console.log('Auth system initialized');
-});
-
-// ============================================
-// YOUR ORIGINAL APP CODE (UNCHANGED)
+// ORIGINAL APPLICATION CODE (UNCHANGED)
 // ============================================
 
 const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook-test/9f091cf5-2629-4342-8b07-41c42601028b';
@@ -287,6 +156,19 @@ let uploadedFiles = {
     applicationPdf: null,
     supportingPdf: null
 };
+
+// Initialize auth on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initAuth();
+    
+    // Set up file upload click handlers
+    document.querySelectorAll('.file-upload-area').forEach(area => {
+        area.addEventListener('click', function() {
+            const inputId = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+            document.getElementById(inputId).click();
+        });
+    });
+});
 
 // Handle Application PDF upload
 document.getElementById('applicationPdf').addEventListener('change', function(e) {
@@ -435,14 +317,9 @@ async function submitToN8n() {
 // PROCESS AND DISPLAY RESULT
 function processAndDisplayResult(resultText, name, email, issueType) {
     const resultBox = document.getElementById('resultBox');
-    const resultHeader = document.getElementById('resultHeader');
-    const resultTitle = document.getElementById('resultTitle');
-    const resultDescription = document.getElementById('resultDescription');
+    const applicationId = document.getElementById('applicationId');
     const applicantInfo = document.getElementById('applicantInfo');
     const documentsInfo = document.getElementById('documentsInfo');
-    const applicationId = document.getElementById('applicationId');
-    const factorsList = document.getElementById('factorsList');
-    const nextSteps = document.getElementById('nextSteps');
     
     // Generate application ID
     const appId = 'APP-' + Date.now().toString().slice(-8);
@@ -465,14 +342,10 @@ function processAndDisplayResult(resultText, name, email, issueType) {
     
     // Try to parse JSON or use text as-is
     try {
-        // Try to parse as JSON
         const data = JSON.parse(resultText);
         console.log('Parsed as JSON:', data);
-        
-        // Display based on JSON structure
         displayJsonResult(data);
     } catch (e) {
-        // Not JSON - display as plain text
         console.log('Treating as plain text');
         displayTextResult(resultText);
     }
