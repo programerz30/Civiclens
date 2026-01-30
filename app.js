@@ -151,7 +151,7 @@ function autoFillUserData(user) {
 // ORIGINAL APPLICATION CODE (UNCHANGED)
 // ============================================
 
-const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook-test/9f091cf5-2629-4342-8b07-41c42601028b';
+const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook/9f091cf5-2629-4342-8b07-41c42601028b';
 let uploadedFiles = {
     applicationPdf: null,
     supportingPdf: null
@@ -555,3 +555,4 @@ document.getElementById('benefitForm').addEventListener('submit', function(event
 // ============================================
 console.log('Benefit Portal initialized');
 console.log('N8N Webhook URL:', N8N_WEBHOOK_URL);
+
