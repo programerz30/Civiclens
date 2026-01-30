@@ -4,14 +4,14 @@
 
 // Initialize EmailJS with your Service ID
 (function() {
-    emailjs.init("r2JdNnE_uuzuG7ptM"); // Replace with your actual EmailJS Public Key
+    emailjs.init("Cr8SkyIldo6vUX6ae"); // Replace with your actual EmailJS Public Key
 })();
 
 // EmailJS Configuration
 const EMAILJS_CONFIG = {
     SERVICE_ID: "service_r60hbpq",      // Your Service ID
     TEMPLATE_ID: "template_8hjqxzg",    // Your OTP Template ID
-    PUBLIC_KEY: "r2JdNnE_uuzuG7ptM"     // Your EmailJS Public Key (get from dashboard)
+    PUBLIC_KEY: "Cr8SkyIldo6vUX6ae"     // Your EmailJS Public Key (get from dashboard)
 };
 
 // ============================================
@@ -855,3 +855,4 @@ console.log('Benefit Portal initialized');
 console.log('N8N Webhook URL:', N8N_WEBHOOK_URL);
 console.log('EmailJS Service ID:', EMAILJS_CONFIG.SERVICE_ID);
 console.log('EmailJS Template ID:', EMAILJS_CONFIG.TEMPLATE_ID);
+
