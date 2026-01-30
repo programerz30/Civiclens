@@ -2,38 +2,55 @@
 // FIREBASE AUTHENTICATION
 // ============================================
 
-// Import Firebase Auth (already included in your script)
-// Make sure Firebase is initialized (as shown in your image.png)
-
-// Initialize Firebase Auth
+// Firebase Auth variables
 let auth = null;
 let currentUser = null;
+let firebaseInitialized = false;
 
-// Initialize Firebase Auth when page loads
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize Firebase when page loads
+function initializeFirebase() {
     try {
-        // Get auth instance (assuming Firebase is already initialized)
+        // Check if Firebase is already available
+        if (typeof firebase === 'undefined') {
+            console.error('Firebase SDK not loaded');
+            setTimeout(initializeFirebase, 1000); // Retry after 1 second
+            return;
+        }
+        
+        // Initialize auth
         auth = firebase.auth();
+        firebaseInitialized = true;
+        console.log('Firebase Auth initialized successfully');
         
         // Set up auth state listener
-        auth.onAuthStateChanged(function(user) {
-            currentUser = user;
-            updateAuthUI(user);
-            
-            if (user) {
-                console.log('User signed in:', user.email);
-                // Auto-fill form with user data
-                autoFillUserData(user);
-            } else {
-                console.log('No user signed in');
-            }
-        });
+        setupAuthListener();
         
-        console.log('Firebase Auth initialized successfully');
     } catch (error) {
-        console.error('Firebase Auth initialization error:', error);
+        console.error('Firebase initialization error:', error);
+        // Retry after 2 seconds
+        setTimeout(initializeFirebase, 2000);
     }
-});
+}
+
+// Set up auth state listener
+function setupAuthListener() {
+    if (!auth) {
+        console.error('Auth not initialized');
+        return;
+    }
+    
+    auth.onAuthStateChanged(function(user) {
+        currentUser = user;
+        updateAuthUI(user);
+        
+        if (user) {
+            console.log('User signed in:', user.email);
+            autoFillUserData(user);
+        } else {
+            console.log('No user signed in');
+        }
+    });
+}
 
 // Update UI based on auth state
 function updateAuthUI(user) {
@@ -45,45 +62,76 @@ function updateAuthUI(user) {
     
     if (user) {
         // User is signed in
-        loginBtn.style.display = 'none';
-        profileDropdown.style.display = 'block';
-        authStatus.style.display = 'block';
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (profileDropdown) profileDropdown.style.display = 'block';
+        if (authStatus) authStatus.style.display = 'block';
         
         // Update user info
-        userEmail.textContent = user.email;
-        profileName.textContent = user.displayName || user.email.split('@')[0];
+        if (userEmail) userEmail.textContent = user.email;
+        if (profileName) {
+            profileName.textContent = user.displayName || user.email.split('@')[0];
+        }
         
         // Close login modal if open
-        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-        if (loginModal) loginModal.hide();
+        const loginModalElement = document.getElementById('loginModal');
+        if (loginModalElement) {
+            const loginModal = bootstrap.Modal.getInstance(loginModalElement);
+            if (loginModal) loginModal.hide();
+        }
         
     } else {
         // User is signed out
-        loginBtn.style.display = 'block';
-        profileDropdown.style.display = 'none';
-        authStatus.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (profileDropdown) profileDropdown.style.display = 'none';
+        if (authStatus) authStatus.style.display = 'none';
     }
 }
 
 // Show login modal
 function showLoginModal() {
-    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-    loginModal.show();
+    if (!firebaseInitialized) {
+        alert('Authentication service is loading. Please wait a moment.');
+        return;
+    }
+    
+    const loginModalElement = document.getElementById('loginModal');
+    if (loginModalElement) {
+        const loginModal = new bootstrap.Modal(loginModalElement);
+        loginModal.show();
+    }
 }
 
 // Show sign up modal
 function showSignUpModal() {
-    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-    if (loginModal) loginModal.hide();
+    if (!firebaseInitialized) {
+        alert('Authentication service is loading. Please wait a moment.');
+        return;
+    }
     
-    const signUpModal = new bootstrap.Modal(document.getElementById('signUpModal'));
-    signUpModal.show();
+    // Close login modal
+    const loginModalElement = document.getElementById('loginModal');
+    if (loginModalElement) {
+        const loginModal = bootstrap.Modal.getInstance(loginModalElement);
+        if (loginModal) loginModal.hide();
+    }
+    
+    // Show sign up modal
+    const signUpModalElement = document.getElementById('signUpModal');
+    if (signUpModalElement) {
+        const signUpModal = new bootstrap.Modal(signUpModalElement);
+        signUpModal.show();
+    }
 }
 
 // Sign in with email/password
 async function signIn() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    if (!firebaseInitialized || !auth) {
+        alert('Authentication service not ready. Please try again.');
+        return;
+    }
+    
+    const email = document.getElementById('loginEmail')?.value;
+    const password = document.getElementById('loginPassword')?.value;
     
     if (!email || !password) {
         alert('Please enter both email and password');
@@ -93,18 +141,36 @@ async function signIn() {
     try {
         await auth.signInWithEmailAndPassword(email, password);
         console.log('Signed in successfully');
+        
     } catch (error) {
         console.error('Sign in error:', error);
-        alert('Error: ' + error.message);
+        let errorMessage = 'Error signing in';
+        
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = 'No account found with this email';
+        } else if (error.code === 'auth/wrong-password') {
+            errorMessage = 'Incorrect password';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Invalid email address';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        alert('Error: ' + errorMessage);
     }
 }
 
 // Create new account
 async function createAccount() {
-    const name = document.getElementById('signUpName').value;
-    const email = document.getElementById('signUpEmail').value;
-    const password = document.getElementById('signUpPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (!firebaseInitialized || !auth) {
+        alert('Authentication service not ready. Please try again.');
+        return;
+    }
+    
+    const name = document.getElementById('signUpName')?.value;
+    const email = document.getElementById('signUpEmail')?.value;
+    const password = document.getElementById('signUpPassword')?.value;
+    const confirmPassword = document.getElementById('confirmPassword')?.value;
     
     // Validation
     if (!name || !email || !password || !confirmPassword) {
@@ -123,7 +189,6 @@ async function createAccount() {
     }
     
     try {
-        // Create user
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         
         // Update profile with name
@@ -134,25 +199,46 @@ async function createAccount() {
         console.log('Account created successfully');
         
         // Close sign up modal
-        const signUpModal = bootstrap.Modal.getInstance(document.getElementById('signUpModal'));
-        if (signUpModal) signUpModal.hide();
+        const signUpModalElement = document.getElementById('signUpModal');
+        if (signUpModalElement) {
+            const signUpModal = bootstrap.Modal.getInstance(signUpModalElement);
+            if (signUpModal) signUpModal.hide();
+        }
         
         alert('Account created successfully! You are now signed in.');
         
     } catch (error) {
         console.error('Account creation error:', error);
-        alert('Error: ' + error.message);
+        let errorMessage = 'Error creating account';
+        
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'Email already in use. Please sign in instead.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Invalid email address';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'Password is too weak';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        alert('Error: ' + errorMessage);
     }
 }
 
 // Sign out
 async function signOut() {
+    if (!firebaseInitialized || !auth) {
+        alert('Authentication service not ready.');
+        return;
+    }
+    
     try {
         await auth.signOut();
         console.log('Signed out successfully');
         alert('You have been signed out');
     } catch (error) {
         console.error('Sign out error:', error);
+        alert('Error signing out: ' + error.message);
     }
 }
 
@@ -164,50 +250,59 @@ function viewProfile() {
     }
     
     const profileInfo = document.getElementById('profileInfo');
-    profileInfo.innerHTML = `
-        <div class="text-center mb-4">
-            <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
-            <h4>${currentUser.displayName || 'User'}</h4>
-            <p class="text-muted">${currentUser.email}</p>
-        </div>
-        <div class="list-group">
-            <div class="list-group-item">
-                <strong>Email:</strong> ${currentUser.email}
+    if (profileInfo) {
+        profileInfo.innerHTML = `
+            <div class="text-center mb-4">
+                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                <h4>${currentUser.displayName || 'User'}</h4>
+                <p class="text-muted">${currentUser.email}</p>
             </div>
-            <div class="list-group-item">
-                <strong>Account Created:</strong> ${currentUser.metadata.creationTime}
+            <div class="list-group">
+                <div class="list-group-item">
+                    <strong>Email:</strong> ${currentUser.email}
+                </div>
+                <div class="list-group-item">
+                    <strong>Account Created:</strong> ${new Date(currentUser.metadata.creationTime).toLocaleDateString()}
+                </div>
+                <div class="list-group-item">
+                    <strong>Last Sign In:</strong> ${new Date(currentUser.metadata.lastSignInTime).toLocaleDateString()}
+                </div>
+                <div class="list-group-item">
+                    <strong>Email Verified:</strong> ${currentUser.emailVerified ? '✅ Yes' : '❌ No'}
+                </div>
             </div>
-            <div class="list-group-item">
-                <strong>Last Sign In:</strong> ${currentUser.metadata.lastSignInTime}
-            </div>
-            <div class="list-group-item">
-                <strong>Email Verified:</strong> ${currentUser.emailVerified ? 'Yes' : 'No'}
-            </div>
-        </div>
-    `;
+        `;
+    }
     
-    const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
-    profileModal.show();
+    const profileModalElement = document.getElementById('profileModal');
+    if (profileModalElement) {
+        const profileModal = new bootstrap.Modal(profileModalElement);
+        profileModal.show();
+    }
 }
 
-// View applications (placeholder - you can expand this)
+// View applications (placeholder)
 function viewApplications() {
     alert('This feature will show your past applications. Coming soon!');
 }
 
 // Auto-fill form with user data
 function autoFillUserData(user) {
-    document.getElementById('name').value = user.displayName || '';
-    document.getElementById('email').value = user.email || '';
+    const nameField = document.getElementById('name');
+    const emailField = document.getElementById('email');
+    
+    if (nameField && !nameField.value) {
+        nameField.value = user.displayName || '';
+    }
+    if (emailField && !emailField.value) {
+        emailField.value = user.email || '';
+    }
 }
 
 // ============================================
-// EXISTING CODE CONTINUES BELOW...
+// YOUR ORIGINAL APP CODE STARTS HERE
 // ============================================
-// Your existing app.js code continues from here...
-// ============================================
-// CONFIGURATION
-// ============================================
+
 const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook-test/9f091cf5-2629-4342-8b07-41c42601028b';
 let uploadedFiles = {
     applicationPdf: null,
@@ -621,11 +716,8 @@ document.getElementById('benefitForm').addEventListener('submit', function(event
 console.log('Benefit Portal initialized');
 console.log('N8N Webhook URL:', N8N_WEBHOOK_URL);
 
-// Add Font Awesome icons if not already added
-if (!document.querySelector('link[href*="font-awesome"]')) {
-    const faLink = document.createElement('link');
-    faLink.rel = 'stylesheet';
-    faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-    document.head.appendChild(faLink);
-
-}
+// Initialize Firebase when page loads
+window.addEventListener('load', function() {
+    console.log('Page loaded, initializing Firebase...');
+    initializeFirebase();
+});
