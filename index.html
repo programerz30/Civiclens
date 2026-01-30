@@ -30,6 +30,135 @@
     </style>
 </head>
 <body>
+    <body>
+    <!-- Add this Navigation Bar with Login/Auth -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-landmark me-2"></i>Benefit Portal
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <!-- Auth Status Container -->
+                <div id="authStatus" class="me-3" style="display: none;">
+                    <span id="userEmail" class="text-white me-3"></span>
+                </div>
+                
+                <!-- Auth Buttons/Profile -->
+                <div id="authButtons">
+                    <!-- Login Button (shown when not logged in) -->
+                    <button id="loginBtn" class="btn btn-light btn-sm me-2" onclick="showLoginModal()">
+                        <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                    </button>
+                    
+                    <!-- Profile Dropdown (shown when logged in) -->
+                    <div id="profileDropdown" class="dropdown" style="display: none;">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="profileMenu" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span id="profileName">Profile</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="viewProfile()"><i class="fas fa-user me-2"></i>My Profile</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="viewApplications()"><i class="fas fa-file-alt me-2"></i>My Applications</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="signOut()"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sign In</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Login Form -->
+                    <form id="loginForm" onsubmit="return false;">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" placeholder="your@email.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" onclick="signIn()">Sign In</button>
+                    </form>
+                    
+                    <!-- Sign Up Link -->
+                    <div class="text-center mt-3">
+                        <p class="text-muted">Don't have an account? 
+                            <a href="#" onclick="showSignUpModal()" class="text-primary">Sign Up</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Up Modal -->
+    <div class="modal fade" id="signUpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="signUpForm" onsubmit="return false;">
+                        <div class="mb-3">
+                            <label for="signUpName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="signUpName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signUpEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="signUpEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signUpPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="signUpPassword" minlength="6" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" minlength="6" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100" onclick="createAccount()">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">My Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="profileInfo">
+                        <!-- Profile info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of your existing container -->
+    <div class="container mt-5">
+        <!-- ... your existing container content ... -->
     <div class="container mt-5">
         <h1 class="text-center mb-4">🏛️ Benefit Eligibility Portal</h1>
         
@@ -188,4 +317,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
