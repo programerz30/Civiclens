@@ -56,6 +56,33 @@
             justify-content: center;
             font-weight: bold;
         }
+        /* OTP Input Styles */
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .resend-otp {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+        .resend-otp:hover {
+            color: #0056b3;
+        }
+        .otp-timer {
+            color: #dc3545;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -294,6 +321,10 @@
                         <label class="form-label">Password</label>
                         <input type="password" class="form-control" id="signupPassword" placeholder="••••••••">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••">
+                    </div>
                     <button class="btn btn-success w-100" onclick="signup()">
                         <i class="fas fa-user-plus me-2"></i>Create Account
                     </button>
@@ -302,8 +333,59 @@
         </div>
     </div>
 
+    <!-- OTP Verification Modal -->
+    <div class="modal fade" id="otpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verify Your Email</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                        <p>We've sent a 6-digit OTP to your email</p>
+                        <p class="fw-bold" id="otpEmailDisplay">user@example.com</p>
+                    </div>
+                    
+                    <!-- OTP Input -->
+                    <div class="otp-container">
+                        <input type="text" class="form-control otp-input" maxlength="1" data-index="1">
+                        <input type="text" class="form-control otp-input" maxlength="1" data-index="2">
+                        <input type="text" class="form-control otp-input" maxlength="1" data-index="3">
+                        <input type="text" class="form-control otp-input" maxlength="1" data-index="4">
+                        <input type="text" class="form-control otp-input" maxlength="1" data-index="5">
+                        <input type="text" class="form-control otp-input" maxlength="1" data-index="6">
+                    </div>
+                    
+                    <!-- Timer and Resend -->
+                    <div class="text-center mt-4">
+                        <p id="otpTimer" class="otp-timer">02:00</p>
+                        <p id="resendOtpText" class="text-muted" style="display: none;">
+                            Didn't receive the code? 
+                            <span class="resend-otp" onclick="resendOTP()">Resend OTP</span>
+                        </p>
+                    </div>
+                    
+                    <!-- Verify Button -->
+                    <button class="btn btn-primary w-100 mt-3" onclick="verifyOTP()" id="verifyOtpBtn">
+                        <i class="fas fa-check-circle me-2"></i>Verify OTP
+                    </button>
+                    
+                    <!-- Cancel Button -->
+                    <button class="btn btn-outline-secondary w-100 mt-2" onclick="cancelOTP()">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
     <!-- App JavaScript -->
     <script src="app.js"></script>
