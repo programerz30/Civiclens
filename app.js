@@ -1,4 +1,211 @@
 // ============================================
+// FIREBASE AUTHENTICATION
+// ============================================
+
+// Import Firebase Auth (already included in your script)
+// Make sure Firebase is initialized (as shown in your image.png)
+
+// Initialize Firebase Auth
+let auth = null;
+let currentUser = null;
+
+// Initialize Firebase Auth when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Get auth instance (assuming Firebase is already initialized)
+        auth = firebase.auth();
+        
+        // Set up auth state listener
+        auth.onAuthStateChanged(function(user) {
+            currentUser = user;
+            updateAuthUI(user);
+            
+            if (user) {
+                console.log('User signed in:', user.email);
+                // Auto-fill form with user data
+                autoFillUserData(user);
+            } else {
+                console.log('No user signed in');
+            }
+        });
+        
+        console.log('Firebase Auth initialized successfully');
+    } catch (error) {
+        console.error('Firebase Auth initialization error:', error);
+    }
+});
+
+// Update UI based on auth state
+function updateAuthUI(user) {
+    const loginBtn = document.getElementById('loginBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const authStatus = document.getElementById('authStatus');
+    const userEmail = document.getElementById('userEmail');
+    const profileName = document.getElementById('profileName');
+    
+    if (user) {
+        // User is signed in
+        loginBtn.style.display = 'none';
+        profileDropdown.style.display = 'block';
+        authStatus.style.display = 'block';
+        
+        // Update user info
+        userEmail.textContent = user.email;
+        profileName.textContent = user.displayName || user.email.split('@')[0];
+        
+        // Close login modal if open
+        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if (loginModal) loginModal.hide();
+        
+    } else {
+        // User is signed out
+        loginBtn.style.display = 'block';
+        profileDropdown.style.display = 'none';
+        authStatus.style.display = 'none';
+    }
+}
+
+// Show login modal
+function showLoginModal() {
+    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+    loginModal.show();
+}
+
+// Show sign up modal
+function showSignUpModal() {
+    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+    if (loginModal) loginModal.hide();
+    
+    const signUpModal = new bootstrap.Modal(document.getElementById('signUpModal'));
+    signUpModal.show();
+}
+
+// Sign in with email/password
+async function signIn() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+    }
+    
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        console.log('Signed in successfully');
+    } catch (error) {
+        console.error('Sign in error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Create new account
+async function createAccount() {
+    const name = document.getElementById('signUpName').value;
+    const email = document.getElementById('signUpEmail').value;
+    const password = document.getElementById('signUpPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validation
+    if (!name || !email || !password || !confirmPassword) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters');
+        return;
+    }
+    
+    try {
+        // Create user
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        
+        // Update profile with name
+        await userCredential.user.updateProfile({
+            displayName: name
+        });
+        
+        console.log('Account created successfully');
+        
+        // Close sign up modal
+        const signUpModal = bootstrap.Modal.getInstance(document.getElementById('signUpModal'));
+        if (signUpModal) signUpModal.hide();
+        
+        alert('Account created successfully! You are now signed in.');
+        
+    } catch (error) {
+        console.error('Account creation error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Sign out
+async function signOut() {
+    try {
+        await auth.signOut();
+        console.log('Signed out successfully');
+        alert('You have been signed out');
+    } catch (error) {
+        console.error('Sign out error:', error);
+    }
+}
+
+// View profile
+function viewProfile() {
+    if (!currentUser) {
+        alert('Please sign in first');
+        return;
+    }
+    
+    const profileInfo = document.getElementById('profileInfo');
+    profileInfo.innerHTML = `
+        <div class="text-center mb-4">
+            <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+            <h4>${currentUser.displayName || 'User'}</h4>
+            <p class="text-muted">${currentUser.email}</p>
+        </div>
+        <div class="list-group">
+            <div class="list-group-item">
+                <strong>Email:</strong> ${currentUser.email}
+            </div>
+            <div class="list-group-item">
+                <strong>Account Created:</strong> ${currentUser.metadata.creationTime}
+            </div>
+            <div class="list-group-item">
+                <strong>Last Sign In:</strong> ${currentUser.metadata.lastSignInTime}
+            </div>
+            <div class="list-group-item">
+                <strong>Email Verified:</strong> ${currentUser.emailVerified ? 'Yes' : 'No'}
+            </div>
+        </div>
+    `;
+    
+    const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
+    profileModal.show();
+}
+
+// View applications (placeholder - you can expand this)
+function viewApplications() {
+    alert('This feature will show your past applications. Coming soon!');
+}
+
+// Auto-fill form with user data
+function autoFillUserData(user) {
+    document.getElementById('name').value = user.displayName || '';
+    document.getElementById('email').value = user.email || '';
+}
+
+// ============================================
+// EXISTING CODE CONTINUES BELOW...
+// ============================================
+// Your existing app.js code continues from here...
+// ============================================
 // CONFIGURATION
 // ============================================
 const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook-test/9f091cf5-2629-4342-8b07-41c42601028b';
@@ -420,4 +627,5 @@ if (!document.querySelector('link[href*="font-awesome"]')) {
     faLink.rel = 'stylesheet';
     faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
     document.head.appendChild(faLink);
+
 }
