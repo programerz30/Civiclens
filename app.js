@@ -1,4 +1,69 @@
 // ============================================
+// FIREBASE CONFIGURATION & AUTH
+// ============================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH6OLAk", // From your screenshot
+    authDomain: "web-6ef07.firebaseapp.com",
+    projectId: "web-6ef07",
+    storageBucket: "web-6ef07.firebasestorage.app",
+    messagingSenderId: "1028816794584",
+    appId: "1:1028816794584:web:792e488366197446d778ad"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Auth State Listener
+onAuthStateChanged(auth, (user) => {
+    const loggedInUI = document.getElementById('loggedInUI');
+    const loggedOutUI = document.getElementById('loggedOutUI');
+    const userEmailDisplay = document.getElementById('userEmailDisplay');
+
+    if (user) {
+        loggedInUI.style.display = 'block';
+        loggedOutUI.style.display = 'none';
+        userEmailDisplay.textContent = user.email;
+        // Auto-fill form email
+        document.getElementById('email').value = user.email;
+    } else {
+        loggedInUI.style.display = 'none';
+        loggedOutUI.style.display = 'block';
+    }
+});
+
+// Sign In Logic
+document.getElementById('signInBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPassword').value;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+// Sign Up Logic
+document.getElementById('signUpBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPassword').value;
+    try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+// Logout Logic
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    signOut(auth);
+});
+// ============================================
 // CONFIGURATION
 // ============================================
 const N8N_WEBHOOK_URL = 'https://mohitpillai12346.app.n8n.cloud/webhook-test/9f091cf5-2629-4342-8b07-41c42601028b';
@@ -420,4 +485,5 @@ if (!document.querySelector('link[href*="font-awesome"]')) {
     faLink.rel = 'stylesheet';
     faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
     document.head.appendChild(faLink);
+
 }
