@@ -1,18 +1,23 @@
 // ============================================
-// EMAILJS CONFIGURATION
+// EMAILJS CONFIGURATION - UPDATE WITH YOUR KEYS!
 // ============================================
 
-// Initialize EmailJS with your Service ID
-(function() {
-    emailjs.init("Cr8SkyIldo6vUX6ae"); // Replace with your actual EmailJS Public Key
-})();
-
-// EmailJS Configuration
+// EmailJS Configuration - UPDATE THESE VALUES!
 const EMAILJS_CONFIG = {
-    SERVICE_ID: "service_r60hbpq",      // Your Service ID
-    TEMPLATE_ID: "template_8hjqxzg",    // Your OTP Template ID
-    PUBLIC_KEY: "Cr8SkyIldo6vUX6ae"     // Your EmailJS Public Key (get from dashboard)
+    SERVICE_ID: "service_r60hbpq",      // Your Service ID from image
+    TEMPLATE_ID: "template_8hjqxzg",    // Your Template ID from image
+    PUBLIC_KEY: "Cr8SkyIldo6vUX6ae"  // ⚠️ REPLACE THIS with your EmailJS Public Key
 };
+
+// Initialize EmailJS
+(function() {
+    if (EMAILJS_CONFIG.PUBLIC_KEY !== "Cr8SkyIldo6vUX6ae") {
+        emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+        console.log("EmailJS initialized with Public Key:", EMAILJS_CONFIG.PUBLIC_KEY);
+    } else {
+        console.warn("⚠️ Please update EmailJS Public Key in app.js");
+    }
+})();
 
 // ============================================
 // AUTHENTICATION SYSTEM WITH OTP
@@ -112,10 +117,17 @@ async function signup() {
         
     } catch (error) {
         console.error('Failed to send OTP:', error);
-        alert('Failed to send OTP. Please try again.');
-        pendingUser = null;
-        otpCode = null;
-        otpExpiry = null;
+        
+        // Fallback: Show OTP in console for testing
+        console.log('OTP for testing:', otpCode);
+        alert(`OTP sent to console for testing: ${otpCode}\nCheck browser console (F12 → Console)`);
+        
+        // Close signup modal
+        const signupModal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+        if (signupModal) signupModal.hide();
+        
+        // Show OTP modal anyway
+        showOTPModal(email);
     }
 }
 
@@ -126,6 +138,11 @@ function generateOTP() {
 
 // Send OTP via EmailJS
 async function sendOTPEmail(email, name, otp) {
+    // Check if EmailJS is initialized
+    if (typeof emailjs === 'undefined') {
+        throw new Error('EmailJS not loaded');
+    }
+    
     const templateParams = {
         to_email: email,
         to_name: name,
@@ -134,6 +151,12 @@ async function sendOTPEmail(email, name, otp) {
         reply_to: "noreply@benefitportal.com"
     };
     
+    console.log('Sending OTP via EmailJS with params:', {
+        service_id: EMAILJS_CONFIG.SERVICE_ID,
+        template_id: EMAILJS_CONFIG.TEMPLATE_ID,
+        template_params: templateParams
+    });
+    
     try {
         const response = await emailjs.send(
             EMAILJS_CONFIG.SERVICE_ID,
@@ -141,11 +164,21 @@ async function sendOTPEmail(email, name, otp) {
             templateParams
         );
         
-        console.log('OTP sent successfully:', response);
+        console.log('✅ OTP sent successfully:', response);
         return true;
     } catch (error) {
-        console.error('EmailJS error:', error);
-        throw new Error('Failed to send OTP email');
+        console.error('❌ EmailJS error:', error);
+        
+        // Provide detailed error message
+        let errorMsg = 'Failed to send OTP email. ';
+        
+        if (error.text) {
+            errorMsg += `Error: ${error.text}`;
+        } else if (error.message) {
+            errorMsg += `Error: ${error.message}`;
+        }
+        
+        throw new Error(errorMsg);
     }
 }
 
@@ -182,6 +215,12 @@ function setupOTPInputs() {
             const value = e.target.value;
             const index = parseInt(e.target.dataset.index);
             
+            // Only allow numbers
+            if (!/^\d*$/.test(value)) {
+                e.target.value = '';
+                return;
+            }
+            
             // If a digit is entered, move to next input
             if (value.length === 1 && index < 6) {
                 otpInputs[index].focus();
@@ -210,6 +249,10 @@ function startOTPTimer() {
     const timerElement = document.getElementById('otpTimer');
     const resendElement = document.getElementById('resendOtpText');
     
+    // Show timer, hide resend
+    timerElement.style.display = 'block';
+    resendElement.style.display = 'none';
+    
     let timeLeft = 120; // 2 minutes in seconds
     
     otpTimer = setInterval(() => {
@@ -233,6 +276,11 @@ async function verifyOTP() {
     // Get OTP from inputs
     const otpInputs = document.querySelectorAll('.otp-input');
     const enteredOTP = Array.from(otpInputs).map(input => input.value).join('');
+    
+    if (enteredOTP.length !== 6) {
+        alert('Please enter the complete 6-digit OTP');
+        return;
+    }
     
     // Retrieve stored OTP data
     const storedOTPData = JSON.parse(localStorage.getItem('pending_otp') || 'null');
@@ -339,7 +387,15 @@ async function resendOTP() {
         
     } catch (error) {
         console.error('Failed to resend OTP:', error);
-        alert('Failed to resend OTP. Please try again.');
+        
+        // Fallback: Show OTP in console
+        console.log('New OTP for testing:', otpCode);
+        alert(`Failed to resend OTP via email. OTP for testing: ${otpCode}\nCheck browser console.`);
+        
+        // Restart timer anyway
+        startOTPTimer();
+        document.getElementById('resendOtpText').style.display = 'none';
+        document.getElementById('otpTimer').style.display = 'block';
     }
 }
 
@@ -454,6 +510,9 @@ let uploadedFiles = {
 
 // Initialize auth on page load
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Benefit Portal Loading...');
+    console.log('EmailJS Config:', EMAILJS_CONFIG);
+    
     initAuth();
     
     // Clear any pending OTP sessions
@@ -855,4 +914,4 @@ console.log('Benefit Portal initialized');
 console.log('N8N Webhook URL:', N8N_WEBHOOK_URL);
 console.log('EmailJS Service ID:', EMAILJS_CONFIG.SERVICE_ID);
 console.log('EmailJS Template ID:', EMAILJS_CONFIG.TEMPLATE_ID);
-
+console.log('⚠️ REMINDER: Update EmailJS Public Key in app.js!');
