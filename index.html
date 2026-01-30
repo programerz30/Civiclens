@@ -314,26 +314,26 @@
     </div>
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js"></script>
     
-    <script>
-      // Firebase Configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH60LAk",
-        authDomain: "web-6ef07.firebaseapp.com",
-        projectId: "web-6ef07",
-        storageBucket: "web-6ef07.firebasestorage.app",
-        messagingSenderId: "1028816794584",
-        appId: "1:1028816794584:web:792e488366197446d778ad",
-        measurementId: "G-TB7WB1E17B"
-      };
+<script>
+// Firebase Configuration - GET THIS FROM YOUR FIREBASE CONSOLE
+  const firebaseConfig = {
+    apiKey: "AIzaSyCj6KmcvgfVxCFTpjsL1GhpEVTMQH60LAk",
+    authDomain: "web-6ef07.firebaseapp.com",
+    projectId: "web-6ef07",
+    storageBucket: "web-6ef07.firebasestorage.app",
+    messagingSenderId: "1028816794584",
+    appId: "1:1028816794584:web:792e488366197446d778ad",
+    measurementId: "G-TB7WB1E17B"
+  };
 
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      console.log('Firebase initialized');
-    </script>
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  console.log('Firebase initialized with project:', firebaseConfig.projectId);
+</script>
 
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
@@ -345,3 +345,4 @@
     <script src="app.js"></script>
 </body>
 </html>
+
