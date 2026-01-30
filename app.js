@@ -599,4 +599,86 @@ function displayTextResult(text) {
     factorsList.innerHTML = `
         <div class="list-group-item">
             <h6 class="mb-1">Decision Summary</h6>
-            <p class="mb-1">${text.length > 200 ? text.substring(0, 200) + '
+            <p class="mb-1">${text.length > 200 ? text.substring(0, 200) + '...' : text}</p>
+        </div>
+    `;
+    
+    // Default next steps
+    nextSteps.innerHTML = `
+        <li class="list-group-item">
+            <i class="fas fa-phone me-2"></i>Contact support for questions
+        </li>
+        <li class="list-group-item">
+            <i class="fas fa-envelope me-2"></i>Check your email for confirmation
+        </li>
+    `;
+}
+
+// UTILITY FUNCTIONS
+function showError(message) {
+    const errorBox = document.getElementById('errorBox');
+    errorBox.innerHTML = `
+        <h5><i class="fas fa-exclamation-triangle me-2"></i>Error</h5>
+        <p>${message}</p>
+        <button onclick="resetForm()" class="btn btn-sm btn-outline-danger mt-2">Try Again</button>
+    `;
+    errorBox.style.display = 'block';
+}
+
+function resetForm() {
+    // Reset form
+    document.getElementById('benefitForm').reset();
+    
+    // Reset file uploads
+    uploadedFiles = { applicationPdf: null, supportingPdf: null };
+    document.getElementById('applicationFileList').innerHTML = '';
+    document.getElementById('supportingFileList').innerHTML = '';
+    
+    // Hide result and error boxes
+    document.getElementById('resultBox').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'none';
+}
+
+function downloadResult() {
+    // Create a simple decision letter
+    const applicantName = document.getElementById('name').value;
+    const status = document.getElementById('resultTitle').textContent;
+    const description = document.getElementById('resultDescription').textContent;
+    
+    const decisionLetter = `
+        Benefit Eligibility Decision Letter
+        
+        Applicant: ${applicantName}
+        Date: ${new Date().toLocaleDateString()}
+        Status: ${status}
+        
+        Decision Summary:
+        ${description}
+        
+        This is an automated decision letter.
+        Please contact support for official documentation.
+    `;
+    
+    // Create a blob and download link
+    const blob = new Blob([decisionLetter], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `decision-letter-${applicantName}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// FORM SUBMISSION HANDLER
+document.getElementById('benefitForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    submitToN8n();
+});
+
+// ============================================
+// INITIALIZATION
+// ============================================
+console.log('Benefit Portal initialized');
+console.log('N8N Webhook URL:', N8N_WEBHOOK_URL);
